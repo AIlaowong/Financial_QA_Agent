@@ -1,0 +1,10 @@
+scikit-learn>=1.0
+python-dotenv>=1.0
+jieba>=0.42
+langchain>=0.3
+langchain-openai>=0.2
+langchain-community>=0.3
+langchain-text-splitters>=0.3
+langgraph>=0.2
+rank-bm25>=0.2
+pymupdf>=1.2

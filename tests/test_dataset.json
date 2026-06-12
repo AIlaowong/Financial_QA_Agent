@@ -1,0 +1,111 @@
+[
+  {
+    "id": 1,
+    "category": "正文理解",
+    "question": "中信证券2025年上半年的财务数据覆盖哪个时间段？",
+    "expected_type": "有答案",
+    "check_points": ["2025年1月1日", "6月30日"],
+    "agent_metrics": {
+      "gateway": {"expect_securities": true},
+      "retrieve": {"expect_min_docs": 1},
+      "answer": {"expect_refuse": false},
+      "red_team": {"expect_evidence": true},
+      "quality": {"expect_min_score": 7}
+    }
+  },
+  {
+    "id": 2,
+    "category": "表格-长期股权投资",
+    "question": "Sino-Ocean Land Logistics Investment Management Limited 在2025年6月30日的账面价值是多少？",
+    "expected_type": "有答案",
+    "check_points": ["7.16"],
+    "agent_metrics": {
+      "gateway": {"expect_securities": true},
+      "retrieve": {"expect_min_docs": 1, "expect_sql": true},
+      "answer": {"expect_refuse": false},
+      "red_team": {"expect_evidence": true},
+      "quality": {"expect_min_score": 7}
+    }
+  },
+  {
+    "id": 3,
+    "category": "表格-金融风险",
+    "question": "中信证券的金融负债中，3个月内到期的金额是多少？",
+    "expected_type": "有答案",
+    "check_points": ["3个月"],
+    "agent_metrics": {
+      "gateway": {"expect_securities": true},
+      "retrieve": {"expect_min_docs": 1, "expect_sql": true},
+      "answer": {"expect_refuse": false},
+      "red_team": {"expect_evidence": true},
+      "quality": {"expect_min_score": 7}
+    }
+  },
+  {
+    "id": 4,
+    "category": "表格-综合收益",
+    "question": "2025年上半年归属于母公司股东的其他综合收益期末余额是多少？",
+    "expected_type": "有答案",
+    "check_points": ["综合收益"],
+    "agent_metrics": {
+      "gateway": {"expect_securities": true},
+      "retrieve": {"expect_min_docs": 1, "expect_sql": true},
+      "answer": {"expect_refuse": false},
+      "red_team": {"expect_evidence": true},
+      "quality": {"expect_min_score": 7}
+    }
+  },
+  {
+    "id": 5,
+    "category": "无答案问题",
+    "question": "中信证券2025年上半年员工总数是多少人？",
+    "expected_type": "无答案/拒答",
+    "check_points": ["无法回答"],
+    "agent_metrics": {
+      "gateway": {"expect_securities": true},
+      "retrieve": {"expect_min_docs": 0},
+      "answer": {"expect_refuse": true},
+      "red_team": {"expect_evidence": true},
+      "quality": {"expect_min_score": 5}
+    }
+  },
+  {
+    "id": 6,
+    "category": "边界-模糊问题",
+    "question": "中信证券2025年上半年的投资情况怎么样？",
+    "expected_type": "有答案",
+    "check_points": ["投资"],
+    "agent_metrics": {
+      "gateway": {"expect_securities": true},
+      "retrieve": {"expect_min_docs": 1},
+      "answer": {"expect_refuse": false},
+      "red_team": {"expect_evidence": true},
+      "quality": {"expect_min_score": 6}
+    }
+  },
+  {
+    "id": 7,
+    "category": "Gateway-非证券",
+    "question": "今天北京的天气怎么样？",
+    "expected_type": "Gateway拒答",
+    "check_points": [],
+    "agent_metrics": {
+      "gateway": {"expect_securities": false},
+      "answer": {"expect_refuse": true}
+    }
+  },
+  {
+    "id": 8,
+    "category": "表格-CLSA",
+    "question": "CLSA Aviation Private Equity Fund II 在2024年的期初和期末账面价值分别是多少？",
+    "expected_type": "有答案",
+    "check_points": ["374,670.81", "438,842.57"],
+    "agent_metrics": {
+      "gateway": {"expect_securities": true},
+      "retrieve": {"expect_min_docs": 1, "expect_sql": true},
+      "answer": {"expect_refuse": false},
+      "red_team": {"expect_evidence": true},
+      "quality": {"expect_min_score": 7}
+    }
+  }
+]
