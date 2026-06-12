@@ -14,7 +14,6 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", os.getenv("DEEPSEEK_API_KEY"))
 OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL")
 LLM_MODEL = os.getenv("LLM_MODEL")
 RED_TEAM_LLM_MODEL = os.getenv("RED_TEAM_LLM_MODEL", os.getenv("LLM_MODEL"))
-ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
 
 # ── 检索模型配置 (3路召回 + RRF + Reranker) ──
 DENSE_EMBEDDING_MODEL = os.getenv("DENSE_EMBEDDING_MODEL")

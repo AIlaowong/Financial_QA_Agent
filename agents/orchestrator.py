@@ -29,7 +29,7 @@ from tools.document_tools import format_sources, demo_answer
 from config import (
     LLM_PROVIDER, OPENAI_API_KEY, OPENAI_BASE_URL, LLM_MODEL,
     RED_TEAM_LLM_MODEL,
-    ANTHROPIC_API_KEY, RETRIEVAL_K, MAX_REFINE_LOOPS, QUALITY_THRESHOLD
+    RETRIEVAL_K, MAX_REFINE_LOOPS, QUALITY_THRESHOLD
 )
 
 logger = logging.getLogger(__name__)
@@ -46,13 +46,7 @@ class Orchestrator:
 
     def _init_llm(self, model: str):
         """初始化 LLM，支持按模型区分实例"""
-        if LLM_PROVIDER == "anthropic" and ANTHROPIC_API_KEY:
-            from langchain_anthropic import ChatAnthropic
-            return ChatAnthropic(
-                model=model or "claude-sonnet-4-6",
-                anthropic_api_key=ANTHROPIC_API_KEY, temperature=0,
-            )
-        elif OPENAI_API_KEY:
+        if OPENAI_API_KEY:
             from langchain_openai import ChatOpenAI
             return ChatOpenAI(
                 model=model, openai_api_key=OPENAI_API_KEY,
