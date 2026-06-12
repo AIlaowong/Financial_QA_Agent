@@ -134,25 +134,15 @@ QUALITY_THRESHOLD=8                    # 质量评分阈值
 python build.py --parser fallback       # 降级链
 ```
 
+![构建知识库](pic/构建知识库.png)
+
 ### 4. 交互问答
 
 ```bash
 python main.py ask
 ```
 
-输出示例：
-```
-[Q] 问题: Sino-Ocean 2025年6月30日的账面价值是多少?
-[A] 答案: 根据文档第44页，Sino-Ocean Land Logistics Investment Management
-    Limited 在2025年6月30日的账面价值为 7.16...
-
-[Gateway] 证券领域: True
-[Sources] 来源引用 (5 条):
-  [1] 第1页 (相关度:0.330) ...
-[RedTeam] 红队审查: 裁决=pass
-[Quality] 质量评估: 评分=8/10
-[!] 需人工确认: 账面价值单位未明确标注
-```
+![交互问答](pic/对话.png)
 
 ### 5. 运行测试
 
@@ -160,6 +150,8 @@ python main.py ask
 python test.py                   # 8 线程并发测试
 python test.py --concurrency 4   # 4 线程
 ```
+
+![测试](pic/测试.png)
 
 详见 [`TESTS.md`](TESTS.md)
 
@@ -239,8 +231,8 @@ project/
 | SQL Agent | ✅ | LangChain create_sql_agent，结构化表格查询 |
 
 ### 未完成
-1、智能体的长短期记忆
-2、部分agent可以升级为skills范式
-3、对表格文档的多模态理解召回、表格转文字再进行语义召回
+1、智能体的长短期记忆  
+2、部分agent可以升级为skills范式  
+3、对表格文档的多模态理解召回、表格转文字再进行语义召回  
 
 
