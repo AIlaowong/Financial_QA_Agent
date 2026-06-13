@@ -23,9 +23,10 @@
     "speedup": 4.1,
     "agent_stats": {
       "gateway":    {"total": 8, "passed": 8},
-      "retrieve":   {"total": 11, "passed": 11},
-      "answer":     {"total": 8, "passed": 8},
-      "red_team":   {"total": 7, "passed": 6},
+      "retrieve":   {"total": 7, "passed": 7},
+      "sql_agent":  {"total": 3, "passed": 3},
+      "answer":     {"total": 8, "passed": 7},
+      "red_team":   {"total": 7, "passed": 7},
       "quality":    {"total": 7, "passed": 7}
     },
     "category_stats": {
@@ -46,7 +47,7 @@
       "per_agent_metrics": [
         {"agent": "gateway",  "metric": "is_securities", "expected": true, "actual": true, "passed": true},
         {"agent": "retrieve", "metric": "min_docs",      "expected": ">= 1", "actual": 5,    "passed": true},
-        {"agent": "retrieve", "metric": "sql_hit",       "expected": true,    "actual": true, "passed": true},
+        {"agent": "sql_agent", "metric": "sql_hit",       "expected": true,    "actual": true, "passed": true},
         {"agent": "answer",   "metric": "refuse",        "expected": false,   "actual": false,"passed": true},
         {"agent": "red_team", "metric": "has_evidence",  "expected": true,    "actual": true, "passed": true},
         {"agent": "quality",  "metric": "min_score",     "expected": ">= 7",  "actual": 10,   "passed": true}
@@ -138,7 +139,7 @@
 
 | 字段 | 说明 |
 |------|------|
-| `agent` | Agent 名称：`gateway` / `retrieve` / `answer` / `red_team` / `quality` |
+| `agent` | Agent 名称：`gateway` / `retrieve` / `sql_agent` / `answer` / `red_team` / `quality` |
 | `metric` | 指标名：`is_securities` / `min_docs` / `sql_hit` / `refuse` / `has_evidence` / `min_score` |
 | `expected` | 期望值 |
 | `actual` | 实际值 |
@@ -285,7 +286,7 @@
 
 **怎么看 Refine badcase?**
 → 找到 `"agent": "refine"`，查看 `history`：
-- `count=2` 且最终 `score < 8` → 精修无效，检查 `_answer` 的 `refine_feedback` 注入逻辑
+- `count=2` 且最终 `score < 8` → 精修无效，检查 `_answer` 中 `refine_history` 的反馈拼接逻辑
 - `history` 中评分递减 → refine 破坏了答案，检查反馈措辞
 
 ### Final（最终输出）
@@ -328,8 +329,8 @@ cat test_data_result/test_results_xxx.json | jq '.results[] | select(.passed == 
 评分和红队矛盾 → 两个 agent 的评分标准不一致？
   → 对齐 QUALITY_SYSTEM 和 RED_TEAM_SYSTEM
 
-精修无效 → refine_feedback 没有注入关键信息？
-  → 检查 _answer 中 feedback 文本的拼接逻辑
+精修无效 → refine_history 中的反馈没有注入关键信息？
+  → 检查 _answer 中 feedback 文本的拼接逻辑（从 refine_history[-1] 提取）
 ```
 
 ## 如何优化对应 Agent

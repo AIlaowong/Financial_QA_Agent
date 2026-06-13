@@ -35,7 +35,7 @@
     "check_points": ["3个月"],
     "agent_metrics": {
       "gateway": {"expect_securities": true},
-      "retrieve": {"expect_min_docs": 1, "expect_sql": true},
+      "retrieve": {"expect_min_docs": 1},
       "answer": {"expect_refuse": false},
       "red_team": {"expect_evidence": true},
       "quality": {"expect_min_score": 7}

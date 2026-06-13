@@ -118,7 +118,7 @@ LLM_MODEL=deepseek-v4-flash
 RED_TEAM_LLM_MODEL=deepseek-v4-pro    # 红队独立模型
 
 # 文档解析
-PARSER_STRATEGY=pymupdf                # pymupdf | mineru | paddleocr | fallback
+PARSER_STRATEGY=fallback               # pymupdf | mineru | paddleocr | fallback
 MINERU_TOKEN=                          # MinerU API Token
 PADDLEOCR_API_KEY=                     # 百度 PaddleOCR API Key
 PADDLEOCR_SECRET_KEY=                  # 百度 PaddleOCR Secret Key
@@ -127,6 +127,7 @@ PADDLEOCR_SECRET_KEY=                  # 百度 PaddleOCR Secret Key
 MAX_REFINE_LOOPS=2                     # 最大精修次数
 QUALITY_THRESHOLD=8                    # 质量评分阈值
 ```
+> 以上仅列出最常用配置，完整配置项（检索模型、RRF 参数、Chunk 参数等）见 `.env.example`。
 
 ### 3. 构建知识库
 
@@ -134,7 +135,11 @@ QUALITY_THRESHOLD=8                    # 质量评分阈值
 python build.py --parser fallback       # 降级链
 ```
 
-![构建知识库](pic/构建知识库.png)
+### 3.1 查看数据库解析结果
+
+```bash
+python demo_parse.py     # 展示文本块 + 结构化表格
+```
 
 ### 4. 交互问答
 
@@ -142,18 +147,15 @@ python build.py --parser fallback       # 降级链
 python main.py ask
 ```
 
-![交互问答](pic/对话.png)
-
 ### 5. 运行测试
 
 ```bash
 python test.py                   # 8 线程并发测试
 python test.py --concurrency 4   # 4 线程
+python test.py --skip-api        # 仅模块导入验证（免 API）
 ```
 
-![测试](pic/测试.png)
-
-详见 [`TESTS.md`](TESTS.md)
+详见 [`TESTS.md`](TESTS.md) | 演示汇总 [`DEMO.md`](DEMO.md)
 
 ## 业务场景扩展
 
@@ -171,23 +173,39 @@ python test.py --concurrency 4   # 4 线程
 project/
 ├── main.py                         # 入口：ask (交互/单次问答)
 ├── build.py                        # 入口：构建知识库
+├── demo_parse.py                   # 入口：查看数据库解析结果
 ├── test.py                         # 入口：运行测试评估
 ├── config.py                       # 配置管理 (.env 加载)
 ├── .env.example                    # 配置模板（无密钥）
 ├── README.md
+├── DEMO.md                         # 演示展示
+├── TESTS.md                        # 测试详细说明
 ├── requirements.txt
 ├── agents/                         # Agent 定义
+│   ├── __init__.py
 │   ├── orchestrator.py             #   多 Agent 编排器 (Gateway/Retrieve/Answer/RedTeam/Quality/Final)
-│   └── sql_agent.py                #   SQL Agent
+│   ├── sql_agent.py                #   SQL Agent
+│   ├── rag_agent.py                #   备选 RAG Agent（检索→生成→自检）
+│   └── self_check_agent.py         #   自检 Agent（数字回溯验证/来源相关性）
 ├── states/                         # Pydantic States
-│   └── orchestrator_state.py       #   编排器状态
+│   ├── __init__.py
+│   ├── orchestrator_state.py       #   编排器状态
+│   ├── rag_state.py                #   RAG Agent 状态
+│   ├── self_check_state.py         #   自检状态
+│   └── sql_agent_state.py          #   SQL Agent 状态
 ├── prompts/                        # Prompt 模板
+│   ├── __init__.py
 │   ├── orchestrator_prompts.py     #   6 个 Agent 的 System/User Prompt
-│   └── sql_agent_prompts.py        #   SQL Agent prompts
+│   ├── sql_agent_prompts.py        #   SQL Agent prompts
+│   ├── rag_prompts.py              #   RAG Agent prompts
+│   └── reranker_prompts.py         #   Reranker prompts
 ├── tools/                          # 工具
+│   ├── __init__.py
 │   ├── retriever.py                #   BM25 / Dense / Sparse / SQL 混合检索器
-│   └── document_tools.py           #   格式化 + 编排器输出
+│   ├── document_tools.py           #   格式化 + 编排器输出
+│   └── self_check_tools.py         #   自检工具（数字回溯/来源相关性）
 ├── document_processing/            # 文档处理
+│   ├── __init__.py
 │   ├── pdf_parser.py               #   PyMuPDF 解析器
 │   ├── mineru_parser.py            #   MinerU API 解析器
 │   ├── paddleocr_parser.py         #   PaddleOCR-VL API 解析器
@@ -195,10 +213,15 @@ project/
 │   ├── table_processor.py          #   表格处理 -> SQL
 │   └── chunker.py                  #   清洗/分块/元数据富化
 ├── tests/
+│   ├── __init__.py
 │   ├── test_dataset.json           #   8 个测试问题 (含 agent_metrics)
+│   ├── test_questions.json         #   测试问题配置
+│   ├── harness_evaluation.json     #   Harness 评估配置
 │   ├── run_evaluation.py           #   自动化评估
 │   ├── validate_sql_recall.py      #   SQL 召回校验
 │   └── EVALUATION_GUIDE.md         #   评估指南
+├── test_data_result/               # 测试结果输出
+├── pic/                            # README 截图
 └── data_db/                        # 生成数据 (gitignore)
 ```
 
@@ -211,7 +234,6 @@ project/
 - **验证**：每个模块通过 `python build.py` / `python test.py` 验证
 - **修正**：发现问题后迭代修正 prompt，确保结果可控
 
-所有代码经人工审查确认，非直接复制粘贴。
 
 ## 项目状态
 ### 已完成
@@ -219,18 +241,19 @@ project/
 | 模块 | 状态 | 说明 |
 |------|------|------|
 | PDF 解析降级链 | ✅ | MinerU → PaddleOCR → PyMuPDF，出错自动降级 |
-| 知识库构建 | ✅ | `build.py`，39 chunks + 表入 SQLite |
+| 知识库构建 | ✅ | `build.py`，53 chunks + 14 表入 SQLite |
 | 4 路混合检索 | ✅ | BM25 + Dense + Sparse + SQL，RRF 融合 + Reranker |
 | Gateway 网关 | ✅ | 证券/非证券二分类，准确率 100% (8/8) |
-| 检索召回 | ✅ | 召回率 100% (10/11，一次偶发 API 错误) |
-| 答案生成 | ✅ | LLM 生成 + 来源引用，拒答正确率 100% |
-| 红队审查 | ✅ | 独立模型 deepseek-v4-pro，证据/幻觉/完整性检查 |
+| SQL Agent | ✅ | LangChain create_sql_agent，结构化表格查询，命中率 100% (3/3) |
+| 检索召回 | ✅ | 4 路混合检索，召回率 100% (7/7) |
+| 答案生成 | ✅ | LLM 生成 + 来源引用；拒答判断由 LLM 评估 |
+| 红队审查 | ✅ | 独立模型 deepseek-v4-pro，证据/幻觉/完整性检查，通过率 100% |
 | 质量评分 | ✅ | 10 分制，阈值触发准确率 100% |
 | 精修循环 | ✅ | 最多 2 次，评分不达标时自动触发 |
-| 并发测试 | ✅ | `test.py --concurrency N`，8 线程 ~2.8x 加速 |
-| SQL Agent | ✅ | LangChain create_sql_agent，结构化表格查询 |
+| 并发测试 | ✅ | `test.py --concurrency N`，8 线程 ~3.9x 加速，通过率 100% |
+| 演示文档 | ✅ | `DEMO.md`，含部署/解析/问答/自检/测试 5 项截图 |
 
-### 未完成
+### TODO
 1、智能体的长短期记忆  
 2、部分agent可以升级为skills范式  
 3、对表格文档的多模态理解召回、表格转文字再进行语义召回  

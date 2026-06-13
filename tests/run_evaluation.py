@@ -82,7 +82,37 @@ def capture_agent_states(state: Dict, question: Dict) -> Dict:
     }
 
 
-def evaluate_agent_metrics(agent_states: Dict, metrics: Dict) -> List[Dict]:
+def _llm_check_refusal(answer_text: str, question: str) -> bool:
+    """LLM 判断答案是否为拒答（比关键词规则更鲁棒）"""
+    import json as _json
+    try:
+        from langchain_openai import ChatOpenAI
+        from langchain_core.messages import HumanMessage, SystemMessage
+        from config import OPENAI_API_KEY, OPENAI_BASE_URL, LLM_MODEL
+
+        if not OPENAI_API_KEY:
+            raise RuntimeError("No API key")
+
+        llm = ChatOpenAI(
+            model=LLM_MODEL, openai_api_key=OPENAI_API_KEY,
+            base_url=OPENAI_BASE_URL, temperature=0,
+        )
+        system = (
+            "你是一个评估员。判断 AI 助手的回答是否属于「拒答」。\n"
+            "拒答 = 明确说无法回答/无法提供/未找到任何信息，且没有给出替代数据或实质性分析。\n"
+            "非拒答 = 提供了具体数据、数字、分析、或可参考的历史/替代信息（即使同时说明了局限性）。\n"
+            "只回复 JSON: {\"is_refusal\": true} 或 {\"is_refusal\": false}"
+        )
+        user = f"问题: {question}\n\n回答:\n{answer_text[:3000]}"
+        resp = llm.invoke([SystemMessage(content=system), HumanMessage(content=user)])
+        return _json.loads(resp.content.strip().split("```")[0]).get("is_refusal", False)
+    except Exception:
+        # 兜底：宽松关键词匹配
+        return any(w in answer_text for w in ["无法回答", "无法提供", "无法获取", "没有包含", "不包含该"]) \
+            and not any(c in answer_text for c in ["来源", "参考", "替代"])
+
+
+def evaluate_agent_metrics(agent_states: Dict, metrics: Dict, question: str = "") -> List[Dict]:
     """根据每个 Agent 的预期指标评估通过/失败"""
     results = []
 
@@ -113,19 +143,21 @@ def evaluate_agent_metrics(agent_states: Dict, metrics: Dict) -> List[Dict]:
     if rt.get("expect_sql"):
         has_sql = any(d["type"] == "sql_agent" for d in agent_states["retrieve"]["documents"])
         results.append({
-            "agent": "retrieve",
+            "agent": "sql_agent",
             "metric": "sql_hit",
             "expected": True,
             "actual": has_sql,
             "passed": has_sql,
         })
 
-    # Answer: Gateway 拒答时 answer 为空，视为拒绝
+    # Answer: Gateway 拒答时 answer 为空，视为拒绝；否则 LLM 判断
     ans = metrics.get("answer", {})
     if "expect_refuse" in ans:
         answer_text = agent_states["answer"]["answer"]
         is_gateway_reject = agent_states["gateway"]["is_securities"] is False
-        is_refusing = is_gateway_reject or any(w in answer_text for w in ["无法回答", "未找到", "没有相关", "不包含"])
+        is_refusing = is_gateway_reject or (
+            _llm_check_refusal(answer_text, question) if not is_gateway_reject else True
+        )
         results.append({
             "agent": "answer",
             "metric": "refuse",
@@ -182,7 +214,7 @@ def run_one_question(agent, q: Dict, idx: int, total: int) -> Dict:
     elapsed = time.time() - start
 
     agent_states = capture_agent_states(state, q)
-    metrics_eval = evaluate_agent_metrics(agent_states, q.get("agent_metrics", {}))
+    metrics_eval = evaluate_agent_metrics(agent_states, q.get("agent_metrics", {}), q["question"])
 
     all_metrics_pass = all(m["passed"] for m in metrics_eval)
     check_hits = agent_states["answer"]["hit_count"]

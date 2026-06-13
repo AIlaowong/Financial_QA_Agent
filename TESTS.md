@@ -26,7 +26,7 @@ python test.py --skip-api
 | 无答案 | 员工总数是多少？ | 是否正确拒答 |
 | 模糊问题 | 投资情况怎么样？ | 概括回答 + 来源 |
 | Gateway 拒答 | 今天天气怎么样？ | 非证券问题拒答 |
-| 精修循环 | 质量评分 < 8 时自动触发 | 验证循环次数 ≤ 2 |
+| 表格-CLSA | CLSA Aviation 期初期末账面价值？ | 多值精确匹配 |
 
 ## 评估维度
 
@@ -55,7 +55,7 @@ python test.py --skip-api
     "total_time_sec": 109.6,
     "serial_equivalent_sec": 444.6,
     "speedup": 4.1,
-    "agent_stats": {"gateway": {"total": 8, "passed": 8}},
+    "agent_stats": {"gateway": {"total": 8, "passed": 8}, "sql_agent": {"total": 3, "passed": 3}},
     "category_stats": {"正文理解": {"passed": 1, "total": 1}}
   },
   "results": [
@@ -71,7 +71,7 @@ python test.py --skip-api
       "per_agent_metrics": [
         {"agent": "gateway",  "metric": "is_securities", "expected": true, "actual": true, "passed": true},
         {"agent": "retrieve", "metric": "min_docs",      "expected": ">= 1", "actual": 5,    "passed": true},
-        {"agent": "retrieve", "metric": "sql_hit",       "expected": true,    "actual": true, "passed": true},
+        {"agent": "sql_agent", "metric": "sql_hit",       "expected": true,    "actual": true, "passed": true},
         {"agent": "answer",   "metric": "refuse",        "expected": false,   "actual": false,"passed": true},
         {"agent": "red_team", "metric": "has_evidence",  "expected": true,    "actual": true, "passed": true},
         {"agent": "quality",  "metric": "min_score",     "expected": ">= 7",  "actual": 10,   "passed": true}
@@ -135,7 +135,7 @@ python test.py --skip-api
 
 | 字段 | 说明 |
 |------|------|
-| `agent` | Agent 名称：`gateway` / `retrieve` / `answer` / `red_team` / `quality` |
+| `agent` | Agent 名称：`gateway` / `retrieve` / `sql_agent` / `answer` / `red_team` / `quality` |
 | `metric` | 指标名：`is_securities` / `min_docs` / `sql_hit` / `refuse` / `has_evidence` / `min_score` |
 | `expected` | 期望值 |
 | `actual` | 实际值 |
