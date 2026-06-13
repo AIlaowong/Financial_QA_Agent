@@ -8,9 +8,15 @@ pip install -r requirements.txt
 cp .env.example .env
 python build.py --parser fallback
 ```
+### 构建知识库:  
+![构建知识库](pic/构建知识库.png)  
 
-![构建知识库](pic/构建知识库.png)
+### 文本块展示:  
+![文本块展示](pic/文本块展示.png)  
 
+### 结构化表格展示:  
+![结构化表格展示](pic/结构化表格展示.png) 
+  
 ---
 
 ## 二、PDF 解析结果
